@@ -1,0 +1,36 @@
+# This file is configuration for "csv2latex"
+# unit length is millimeter
+
+csvfile      =  "address.csv"
+
+print_pagenum = true
+
+print_frame  = true 
+#print_tombow = true
+# true to prefer horizontal repeat, false for vertical
+repeat_direction = true 
+
+paper_width  = 210
+paper_height = 297
+
+box_width   = 160
+box_height  = 15
+
+x_repeat    = 1
+y_repeat    = 18
+
+x_offset    = 0
+y_offset    = -3
+
+
+# 各項目の配置
+# 左下を基準とした座標
+# itemColmn =x,y,strings
+
+item     =  [  3,  8, '\Large 氏名:\textbf{__0__ __1__}']
+item     =  [ 65,  8, '\large TEL: \texttt{__2__}']
+item     =  [110, 8, '\large FAX: \texttt{__3__}']
+item     =  [  3,  2, '〒\texttt{__4__} \textsf{__5__}'] 
+item     =  [ 70,  2, 'E-mail: \texttt{__6__}'] 
+
+#加藤,亮1,03-1111-1111,03-1111-1111,111-1111,東京都東京区東京1-1-1,rook@00.iij4u. or.jp

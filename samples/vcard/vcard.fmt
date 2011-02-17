@@ -1,0 +1,43 @@
+#!/usr/local/bin/csvlayout
+
+csvfile      =  "vcard.csv"
+
+## print page number, frame of box, tombow
+## default is 'false'
+#print_pagenum=  true
+#print_frame  =	true
+print_tombow =  true
+
+## 'true' to prefer horizontal repeat, 'false' for vertical
+## default is 'false'
+#repeat_direction = false
+
+# default is A4 (210 x 297)
+paper_width  = 210
+paper_height = 297
+
+
+box_width   = 90.5
+box_height  = 55
+
+x_repeat    = 2
+y_repeat    = 5
+
+x_offset    = 0
+y_offset    = -5
+
+
+## Layout of items, left-bottom origin coordinate
+## Format: "item = [x,y,strings]"
+## You can use "__n__" to be substituted "nth"number in a csv file.
+
+item=[25.9, 43.7, '\definecolor{HAMONBlue}{rgb}{0.039, 0.322, 0.604}\textcolor{HAMONBlue}{\Large\texttt{Orchestra} {\sffamily{\bfseries{HA\'MON}}}}']
+item=[18, 32.3, '\footnotesize Stage Manager']
+item=[22.8, 25.3, '\huge Ryoichi\hspace{0.7zw}KATO'] 
+
+item=[47.3, 6.0, '\ttfamily ryo1kato@gmail.com']
+item=[45.4, 3.0, '\ttfamily @ryo1kato']
+
+
+item=[5.4,  40.2, '\makebox{\includegraphics[width=50pt]{logo.eps}}']
+item=[82.9, 49.9, '\rotatebox{-90}{\footnotesize http://www.hamon.tv/}']

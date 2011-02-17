@@ -1,0 +1,23 @@
+  # Iterator usage candidate 1
+  aCSV = CSV::new( aStream )
+  nr = 0
+  aCSV.each do |row|  # row is an array of cols.
+    nr += 1
+    nc = 0
+    row.each do |col|
+      nc += 1
+      puts "#{ nc }, #{ nr } = #{ col }"
+    end
+  end
+
+  # Iterator usage candidate 2
+  aCSV = CSV::new( aStream )
+  nr = 0
+  while !aCSV.eof()
+    nr += 1
+    nc = 0
+    aCSV.each do |col|
+      nc += 1
+      puts "#{ nc }, #{ nr } = #{ col }"
+    end
+  end
