@@ -15,6 +15,7 @@ module TeXLayout
       @print_frame=false
       @print_tombow=false
       @repeat_direction=true
+      @tex_prologue=""
 
       #for alignment
       @page=[]           #array of pages
@@ -58,7 +59,9 @@ module TeXLayout
     def repeat_direction(repeat_direction)
       @repeat_direction=repeat_direction
     end
-
+    def tex_prologue(tex_prologue)
+      @tex_prologue=tex_prologue
+    end
 
     private
     def put_header
@@ -84,6 +87,7 @@ module TeXLayout
 
 \\begin{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#{@tex_prologue}
 EOF
     end
 

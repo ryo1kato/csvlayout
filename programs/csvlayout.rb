@@ -82,6 +82,7 @@ Fmt_acceptable_options = {
 
   "x_offset"         => /[0-9]+/,
   "y_offset"         => /[0-9]+/,
+  "tex_prologue"     => /.*/,
   "item"             => /\[[\s\.0-9]+,[\s\.0-9]+,.*\]/
 }
 
@@ -134,46 +135,46 @@ class Format
       #Check the line is form of expression for value substitution.
       #If not just ignore the line
       if /^\s*([a-z-_]+)\s*=\s*([^;]*)\s*$/ =~ @line
-	@option_matched = $1 # preserve match result
-	@value_matched  = $2 
-	@correspond_option_found = false # not found yet :)
+    @option_matched = $1 # preserve match result
+    @value_matched  = $2 
+    @correspond_option_found = false # not found yet :)
 
-	# Search the option definition to see the expression is valid
-	Fmt_acceptable_options.each do |option,value_re|
-	  if  @option_matched == option           # correspont option for the statemment found.
-	    if value_re =~ @value_matched         # AND value for it is valid
+    # Search the option definition to see the expression is valid
+    Fmt_acceptable_options.each do |option,value_re|
+      if  @option_matched == option           # correspont option for the statemment found.
+        if value_re =~ @value_matched         # AND value for it is valid
 
-	      #########################
-	      #   then eval the line  #
-	      #########################
-	      if @option_matched == "item"
-		eval "@item = #{@value_matched}"
-		if @item.length == 3
-		  @items.push(@item)
-		else
-		  STDERR.print "W: Illegal value \"#{@value_matched}\" for item in line #{@linenum}.\n"
-		  STDERR.print "Parse Error.\n"
-		  exit(1)
-		end
-	      else
-		eval "def #{option};  return #{@value_matched}; end"
-	      end
-	      @correspond_option_found = TRUE # and flag is ON.
-	      break                           # not neccesary far more query in this line
+          #########################
+          #   then eval the line  #
+          #########################
+          if @option_matched == "item"
+        eval "@item = #{@value_matched}"
+        if @item.length == 3
+          @items.push(@item)
+        else
+          STDERR.print "W: Illegal value \"#{@value_matched}\" for item in line #{@linenum}.\n"
+          STDERR.print "Parse Error.\n"
+          exit(1)
+        end
+          else
+        eval "def #{option};  return #{@value_matched}; end"
+          end
+          @correspond_option_found = TRUE # and flag is ON.
+          break                           # not neccesary far more query in this line
 
-	    else # @value_matched isn't valid format (described as value_re).
-	      STDERR.print "W: Illegal value \"#{@value_matched}\" for #{option} in line #{@linenum}.\n"
-	      STDERR.print "Parse Error.\n"
-	      exit(1)
-	    end
-	  end
-	end #of Fmt_acceptable_option.each
+        else # @value_matched isn't valid format (described as value_re).
+          STDERR.print "W: Illegal value \"#{@value_matched}\" for #{option} in line #{@linenum}.\n"
+          STDERR.print "Parse Error.\n"
+          exit(1)
+        end
+      end
+    end #of Fmt_acceptable_option.each
 
-	unless @correspond_option_found
-	  STDERR.print "W: Illegal option/statement in line #{@linenum}: #{@line}.\n"
-	  STDERR.print "Parse Error.\n"
-	  exit(1)
-	end
+    unless @correspond_option_found
+      STDERR.print "W: Illegal option/statement in line #{@linenum}: #{@line}.\n"
+      STDERR.print "Parse Error.\n"
+      exit(1)
+    end
       end
     end
   end #of initialize
@@ -192,7 +193,10 @@ def convert(data_array, format)
   for i in 0 ... format.items.size
     formated_text_current = format.items[i][2].clone
     for j in 0 ... data_array.size
-      eval "formated_text_current.gsub!(/__#{j}__/,data_array[j])"
+      if formated_text_current =~ /__#{j}__/
+        if ! data_array[j] then data_array[j]="" end
+        eval "formated_text_current.gsub!(/__#{j}__/,data_array[j])"
+      end
     end
     formated_text_and_coordinates.push([format.items[i][0], format.items[i][1], formated_text_current])
   end
@@ -226,10 +230,11 @@ if defined? format.print_pagenum then texpaper.print_pagenum(format.print_pagenu
 if defined? format.print_frame then texpaper.print_frame(format.print_frame) end
 if defined? format.print_tombow then texpaper.print_tombow(format.print_tombow) end
 if defined? format.repeat_direction then texpaper.repeat_direction(format.repeat_direction) end
+if defined? format.tex_prologue then texpaper.tex_prologue(format.tex_prologue) end
 
 
 #============== csv file open & parse ================
-unless csvfilepath 
+unless csvfilepath
   if defined? format.csvfile
     csvfilepath=format.csvfile
   else
