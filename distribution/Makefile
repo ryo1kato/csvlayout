@@ -1,21 +1,16 @@
 all: csvlayout
 
-csvlayout: csvlayout.rb csv-parse.rb texlayout.rb
-	echo '#!/usr/bin/ruby -w -Ku' > csvlayout
-	cat texlayout.rb         >> csvlayout
-	cat csv-parse.rb         >> csvlayout
-	egrep -v 'load "texlayout.rb"|load "csv-parse.rb"' csvlayout.rb\
-                                 >>csvlayout
-	chmod +x csvlayout
-
-csv-parse.rb: csv-parse.rb-patch csv-1.0.0/lib/csv.rb
-	cp csv-1.0.0/lib/csv.rb ./csv-parse.rb
-	patch csv-parse.rb csv-parse.rb-patch
-
+csvlayout: csvlayout.rb texlayout.rb
+	echo '#!/usr/bin/ruby -w -Ku' > $@
+	cat texlayout.rb         >> $@
+	egrep -v 'load "texlayout.rb"' csvlayout.rb >> $@
+	chmod +x $@
 
 install: csvlayout
-	cp csvlayout /usr/local/bin
+	sudo install -m 755 -o root -g root csvlayout /usr/local/bin
 
 clean:
-	rm -f csv-parse.rb
 	rm -f csvlayout
+
+.DELETE_ON_ERROR: csvlayout
+.PHONY: all install clean

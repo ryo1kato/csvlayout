@@ -6,7 +6,6 @@ version      =  1.0.3
 packagename  =  $(progname)-$(version)
 
 
-
 package: prepare
 	cp -r distribution $(packagename)
 	make -C $(packagename) clean
@@ -14,7 +13,7 @@ package: prepare
 	rm -rf $(packagename)
 
 
-prepare: distribution/csvlayout.rb distribution/texlayout.rb distribution/csv-parse.rb-patch copy-samples
+prepare: distribution/csvlayout.rb distribution/texlayout.rb copy-samples
 
 distribution/csvlayout.rb: programs/csvlayout.rb
 	cp $^ $@
@@ -28,11 +27,6 @@ distribution/README: README
 distribution/README.ja: README.ja
 	cp $^ $@
 
-distribution/csv-parse.rb-patch:
-	(cd distribution && \
-	diff --context csv-1.0.0/lib/csv.rb ../programs/csv-parse.rb\
-	>csv-parse.rb-patch ; true)
-
 copy-samples: clean-sample
 	cp -rf samples distribution
 
@@ -43,7 +37,6 @@ clean: clean-sample
 	rm -f distribution/csvlayout
 	rm -f distribution/csvlayout.rb
 	rm -f distribution/texlayout.rb
-	rm -f distribution/csv-parse.rb-patch
 	rm -f distribution/README*
 	rm -rf distribution/samples
 	rm -f csvlayout-*.tar.gz

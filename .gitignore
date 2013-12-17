@@ -9,3 +9,4 @@ csvlayout-*.tar.gz
 *~
 *.bak
 distribution
+!distribution/Makefile

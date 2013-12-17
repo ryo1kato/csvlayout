@@ -1,8 +1,8 @@
 #coding:utf-8
 
-=begin ======================== COPYRIGHT ==============================
-
-csv2form
+=begin
+======================== COPYRIGHT ==============================
+csvlayout - Tiled label print merge print with LaTeX
 
 Permission of copy and/or modification of this program is granted
 under the term of GPL (GNU General Pubric lisence) version 2 or higher
@@ -11,13 +11,14 @@ or same terms of ruby(at your option).
 
 
                                           Feb 2000 (C) Ryoichi Kato
-=end ===================================================================
+=end
 
 
 
 ############# Include Files and default value of variable ################
 require "optparse"
-load "csv-parse.rb"
+require "pathname"
+require "csv"
 load "texlayout.rb"
 
 
@@ -27,14 +28,14 @@ Copyright="2013 (C) Ryoichi Kato"
 
 
 USAGE=<<"EOUSAGE"
-USAGE: #{File.basename($0)} [-s|--skip][-d|-debug] [-f CSV_FILE.csv] FORMAT_FILE.fmt
+USAGE: #{File.basename($0)} [OPTIONS] [-f CSV_FILE.csv] FORMAT_FILE.fmt
          try --help for detail.
 EOUSAGE
 
 
 
 HELP=<<"EOHELP"
-USAGE: #{File.basename($0)} [-s|--skip][-d|-debug] [-f CSV_FILE.csv] FORMAT_FILE.fmt
+USAGE: #{File.basename($0)} [OPTIONS] [-f CSV_FILE.csv] FORMAT_FILE.fmt
 
  * Read CSV data file as table such like that of spread sheet or RDBMS,
    and output formated data in  LaTeX Format.
@@ -46,16 +47,12 @@ OPTIONS
   -f, --csvfile
     Spesify csv file explicitly (This option will over ride the definition
     of csv file in .fmt file.)
-  -s, --skip
-    Just skip csv rows which couse parse error instead of exiting with
-    error message.
   -d, --debug
     Print debugging imformation.
   -h, --help
     Print this help and exit.
   -v, --version
     Print verion information and exit.
-                                                             2000 (c) Rook
 EOHELP
 
 
@@ -98,7 +95,7 @@ opt.on('-v', '--version') { |flag|
   print File.basename($0), "  ", "Ver.", Version, "                ",Copyright, "\n"
   exit(0)
 }
-opt.on('-s', '--skip') { $skip = TRUE }
+#opt.on('-s', '--skip') { $skip = TRUE }
 opt.on('-d', '--debug') { $DEBUG = TRUE }
 opt.on('-f FILE', '--csvfile FILE') { |flag| csvfilepath = flag }
 
@@ -187,6 +184,7 @@ def convert(data_array, format)
     for j in 0 ... data_array.size
       if formated_text_current =~ /__#{j}__/
         if ! data_array[j] then data_array[j]="" end
+        print data_array[j]
         eval "formated_text_current.gsub!(/__#{j}__/,data_array[j])"
       end
     end
@@ -228,7 +226,10 @@ if defined? format.tex_prologue then texpaper.tex_prologue(format.tex_prologue) 
 #============== csv file open & parse ================
 unless csvfilepath
   if defined? format.csvfile
-    csvfilepath=format.csvfile
+    csvfilepath=Pathname.new(format.csvfile) # FIXME. make it relative to formatfile
+    if not csvfilepath.absolute?
+        csvfilepath = Pathname.new(fmtfilepath).dirname() + csvfilepath
+    end
   else
     STDERR.print "CSV file isn't specified in .fmt file.\n"
     STDERR.print "use -f option to specify it in command line.\n\n"
@@ -240,29 +241,13 @@ end
 
 if File.readable?(csvfilepath)
   csvfile=File.open(csvfilepath, "r")
+  CSV::foreach(csvfile) do |row|
+        texpaper.put( convert(row, format) )
+  end
 else
   STDERR.print "Can't load csvfile: #{csvfilepath}\n"
   exit(1)
 end
 
-linenum=0
-csvfile.each do |line|
-  linenum += 1
-  begin
-    columns=CSV::parse(line.chomp!)
-  rescue CSV::IllegalFormatError
-    STDERR.print "CSV file has corrupted entry in line #{linenum}."
-    if $skip==TRUE
-      STDERR.print " ignored since --skip option set.\n"
-      next
-    else
-      STDERR.print " enable --skip option to ignore corrupt CSV entry.\n"
-      exit(1)
-    end
-  end
-
-  texpaper.put( convert(columns, format) )
-
-end
 
 texpaper.print_tex
