@@ -1,9 +1,11 @@
 csvlayout-*.tar.gz
+csvlayout
 *.dvi
 *.log
 *.ps
 *.pdf
 *.tex
+*.aux
 .hg*
 *~
 *.bak

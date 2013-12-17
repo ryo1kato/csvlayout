@@ -7,7 +7,7 @@ csvlayout: csvlayout.rb texlayout.rb
 	chmod +x $@
 
 install: csvlayout
-	sudo install -m 755 -o root -g root csvlayout /usr/local/bin
+	sudo install -m 755 -g root csvlayout /usr/local/bin
 
 clean:
 	rm -f csvlayout

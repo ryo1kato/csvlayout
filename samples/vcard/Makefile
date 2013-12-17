@@ -1,6 +1,6 @@
 filename ?= vcard
 
-csvlayout = ../../distribution/csvlayout
+csvlayout = ../../csvlayout
 
 ptex      = platex
 xdvi      = xdvi-ja
@@ -12,7 +12,6 @@ all: $(filename).dvi
 
 $(csvlayout):
 	make -C ../..
-	make -C ../../distribution
 
 
 $(filename).dvi: $(filename).tex
