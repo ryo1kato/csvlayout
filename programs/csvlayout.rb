@@ -184,7 +184,6 @@ def convert(data_array, format)
     for j in 0 ... data_array.size
       if formated_text_current =~ /__#{j}__/
         if ! data_array[j] then data_array[j]="" end
-        print data_array[j]
         eval "formated_text_current.gsub!(/__#{j}__/,data_array[j])"
       end
     end
