@@ -1,7 +1,7 @@
 all: csvlayout
 
 csvlayout: csvlayout.rb texlayout.rb
-	echo '#!/usr/bin/ruby -w -Ku' > $@
+	echo '#!/usr/bin/ruby -w' > $@
 	cat texlayout.rb         >> $@
 	egrep -v 'load "texlayout.rb"' csvlayout.rb >> $@
 	chmod +x $@

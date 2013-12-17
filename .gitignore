@@ -4,9 +4,10 @@ csvlayout-*.tar.gz
 *.ps
 *.pdf
 *.tex
-
 .hg*
 *~
 *.bak
+.*.swp
+
 distribution
 !distribution/Makefile

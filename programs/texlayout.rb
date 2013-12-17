@@ -124,7 +124,7 @@ EOF
         @boxnum += 1
 
         if @repeat_direction  #horizontal
-          @alignment_x = (@boxnum-1)%@x_repeat +1
+          @alignment_x = (@boxnum-1)%@x_repeat + 1
           @alignment_y = (@boxnum-1)/@x_repeat + 1
         else
           @alignment_x = (@boxnum)/(@y_repeat+1) + 1
@@ -181,7 +181,7 @@ EOF
             print "\\put(#{3 + @frame_width}, #{0 + @frame_height}){\\line(1, 0){5}}\n"
             for i in 1 ... @x_repeat
               print "\\put(#{i * @box_width} , -3){\\line(0, -1){5}}\n"
-              print "\\put(#{i * @box_width} , #{@frame_height +3}){\\line(0, 1){5}}\n"
+              print "\\put(#{i * @box_width} , #{@frame_height + 3}){\\line(0, 1){5}}\n"
             end
             for i in 1 ... @y_repeat
               print "\\put(-3, #{i * @box_height}){\\line(-1, 0){5}}\n"

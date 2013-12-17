@@ -114,7 +114,7 @@ end
 
 class Format
   def initialize(fmtfilepath)
-    @fmtfile=File.open(fmtfilepath)
+    @fmtfile=File.open(fmtfilepath, "r:UTF-8")
     @items = []
     @linenum=0
 
@@ -240,8 +240,7 @@ end
 
 
 if File.readable?(csvfilepath)
-  csvfile=File.open(csvfilepath, "r")
-  CSV::foreach(csvfile) do |row|
+  CSV::foreach(csvfilepath, "r:UTF-8") do |row|
         texpaper.put( convert(row, format) )
   end
 else
