@@ -1,6 +1,6 @@
 progname     =csvlayout
 #version = $(shell grep 'Version=' programs/csvlayout.rb | sed -e 's/Version=//')
-version      =  1.0.2
+version      =  1.0.3
 
 
 packagename  =  $(progname)-$(version)

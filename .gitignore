@@ -3,6 +3,7 @@ csvlayout-*.tar.gz
 *.log
 *.ps
 *.pdf
+*.tex
 
 .hg*
 *~

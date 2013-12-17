@@ -2,7 +2,7 @@ filename ?= vcard
 
 csvlayout = ../../distribution/csvlayout
 
-ptex      = platex-euc
+ptex      = platex
 xdvi      = xdvi-ja
 dvi2pdf   = dvipdfmx
 acroread  = open  #for MacOSX

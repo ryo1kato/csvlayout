@@ -1,3 +1,4 @@
+#coding:utf-8
 
 =begin ======================== COPYRIGHT ==============================
 
@@ -14,16 +15,15 @@ or same terms of ruby(at your option).
 
 
 
-
 ############# Include Files and default value of variable ################
-require "getopts"
+require "optparse"
 load "csv-parse.rb"
 load "texlayout.rb"
 
 
 ###################### HELP and VERSION infomations ######################
-Version="1.0.0"
-Copyright="2000 (C) Ryoichi Kato"  
+Version="1.0.3"
+Copyright="2013 (C) Ryoichi Kato"
 
 
 USAGE=<<"EOUSAGE"
@@ -89,28 +89,20 @@ Fmt_acceptable_options = {
 
 
 ##################### Commandline Option Parse ###########################
-
-
-if ! getopts("hvsd", "f:", "help", "version", "skip", "debug", "csvfile:") 
-  STDERR.print "You gave unrecognizable/illegal option.\n"
-  STDERR.print USAGE
-  exit(1)
-end
-
-
-if $OPT_d || $OPT_debug   then $DEBUG=TRUE else $skip=FALSE end
-if $OPT_s || $OPT_skip    then $skip=TRUE  else $skip=FALSE end
-if $OPT_f
-  csvfilepath=$OPT_f
-elsif $OPT_csvfile
-  csvfilepath=$OPT_csvfile
-end
-if $OPT_h || $OPT_help    then  print HELP;  exit(0)  end
-if $OPT_v || $OPT_version
+$skip  = FALSE
+$DEBUG = FALSE
+csvfilepath = nil
+opt = OptionParser.new
+opt.on('-h', '--help') { |flag| print HELP; exit(0); }
+opt.on('-v', '--version') { |flag|
   print File.basename($0), "  ", "Ver.", Version, "                ",Copyright, "\n"
   exit(0)
-end
+}
+opt.on('-s', '--skip') { $skip = TRUE }
+opt.on('-d', '--debug') { $DEBUG = TRUE }
+opt.on('-f FILE', '--csvfile FILE') { |flag| csvfilepath = flag }
 
+opt.parse!(ARGV)
 
 unless fmtfilepath=ARGV[0]
   STDERR.print "please specify .fmt file.\n"
@@ -134,7 +126,7 @@ class Format
 
       #Check the line is form of expression for value substitution.
       #If not just ignore the line
-      if /^\s*([a-z-_]+)\s*=\s*([^;]*)\s*$/ =~ @line
+      if /^\s*([a-z_-]+)\s*=\s*([^;]*)\s*$/ =~ @line
     @option_matched = $1 # preserve match result
     @value_matched  = $2 
     @correspond_option_found = false # not found yet :)

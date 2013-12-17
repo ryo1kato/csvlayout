@@ -1,7 +1,7 @@
 all: csvlayout
 
 csvlayout: csvlayout.rb csv-parse.rb texlayout.rb
-	echo '#!/usr/bin/ruby -w' > csvlayout
+	echo '#!/usr/bin/ruby -w -Ku' > csvlayout
 	cat texlayout.rb         >> csvlayout
 	cat csv-parse.rb         >> csvlayout
 	egrep -v 'load "texlayout.rb"|load "csv-parse.rb"' csvlayout.rb\
