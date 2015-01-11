@@ -1,0 +1,482 @@
+#!/usr/bin/ruby -w
+module TeXLayout
+  class Paper
+
+    def initialize
+      #option value
+      @paper_width=210   #default is  A4
+      @paper_height=297
+      @box_width=90.5    #name card size
+      @box_height=50
+      @x_repeat=2        #fit default box to default paper
+      @y_repeat=5
+      @x_offset=0
+      @y_offset=0
+      @print_pagenum=false
+      @print_frame=false
+      @print_tombow=false
+      @repeat_direction=true
+      @tex_preamble=""
+      @tex_prologue=""
+
+      #for alignment
+      @page=[]           #array of pages
+      @boxes=[]          #store all boxes as array when 'put' called
+      @pagenum=1         #for page numbering
+      @boxnum=0          #how many boxes already put in current page?
+    end
+
+    def debug
+      STDERR.print "paper size:  ", @paper_width, " ", @paper_height, "\n"
+      STDERR.print "box size:    ", @box_width, " ", @box_height, "\n"
+      STDERR.print "repeatation: ", @x_repeat, " ", @y_repeat, "\n"
+      STDERR.print "offset:      ", @x_offset, " ", @y_offset, "\n"
+    end
+
+    def set_papersize(paper_width, paper_height)
+      @paper_width=paper_width
+      @paper_height=paper_height
+    end
+    def set_boxsize(box_width, box_height)
+      @box_width=box_width
+      @box_height=box_height
+    end
+    def set_repeat(x_repeat, y_repeat)
+      @x_repeat=x_repeat
+      @y_repeat=y_repeat
+    end
+    def set_offset(x_offset, y_offset)
+      @x_offset=x_offset
+      @y_offset=y_offset
+    end
+    def print_pagenum(print_pagenum)
+      @print_pagenum=print_pagenum
+    end
+    def print_frame(print_frame)
+      @print_frame=print_frame
+    end
+    def print_tombow(print_tombow)
+      @print_tombow=print_tombow
+    end
+    def repeat_direction(repeat_direction)
+      @repeat_direction=repeat_direction
+    end
+    def tex_preamble(tex_preamble)
+      @tex_preamble=tex_preamble
+    end
+    def tex_prologue(tex_prologue)
+      @tex_prologue=tex_prologue
+    end
+
+    private
+    def put_header
+
+        print <<EOF
+\\documentclass{jarticle}
+\\unitlength     = 1mm
+
+\\parindent      = 0pt
+\\headsep        = 0pt
+\\headheight     = 0pt
+\\marginparwidth = 0pt
+\\marginparsep   = 0pt 
+\\topmargin      = -25.4mm
+\\evensidemargin = -25.4mm
+\\oddsidemargin  = \\evensidemargin
+
+\\textwidth      = #{@paper_width}mm
+\\textheight     = #{@paper_height}mm
+
+\\pagestyle{empty}
+\\usepackage{graphicx,color}
+\\usepackage{plext}
+#{@tex_preamble}
+\\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#{@tex_prologue}
+EOF
+    end
+
+
+    # put single row of csv data given as array of formated 'items[]'
+    public
+    def put( data_array )
+      @boxes.push(data_array)
+    end
+
+    ############ calculate margin ############
+
+    def print_tex
+      ############# CALUCULATE margins etc #################
+      # box alignment origin for TOP-LEFT of page is set to TOP-LEFT
+      # Tough original 'picture' environment of TeX's coordinate system is
+      # UP-RIGHT increment, We introduce DOWN-RIGHT coordinate system.
+      # So, if you want increment y-axis, you should decrement Y-value for TeX
+      # Although x-axis is normal
+
+      @x_origin =  (@paper_width - @box_width*@x_repeat)/2
+      @y_origin = -(@paper_height - @box_height*@y_repeat)/2
+      @frame_width = @box_width * @x_repeat
+      @frame_height = @box_height * @y_repeat
+
+
+      ############# HEADER for whole document ##############
+      put_header
+
+
+      ######################## BODY ########################
+      @boxes.each do |box|
+        #======== calculate where box to be put ========
+        @boxnum += 1
+
+        if @repeat_direction  #horizontal
+          @alignment_x = (@boxnum-1)%@x_repeat + 1
+          @alignment_y = (@boxnum-1)/@x_repeat + 1
+        else
+          @alignment_x = (@boxnum)/(@y_repeat+1) + 1
+          @alignment_y = (@boxnum-1) % (@y_repeat) + 1
+        end
+
+        @box_x =  (@alignment_x - 1) * @box_width
+        @box_y = @frame_height - (@alignment_y) * @box_height
+
+
+        #================= page header =================
+        if @boxnum == 1 # if beginning of a page
+
+          # frame which encircles whole page
+          print "%============== new page ===============\n"
+          print "\\begin{picture}(0, 0)\n"
+
+          # frame which encircles edge of aligned boxes 
+          print "\\put(#{@x_origin + @x_offset}, #{@y_origin - @frame_height - @y_offset}){\n"
+          print "\\begin{picture}(0,0)\n"
+
+          if @print_frame
+            print "%---------- frame ---------\n"
+            print "\\put(0,0){\\framebox(#{@box_width*@x_repeat}, #{@box_height*@y_repeat})}\n"
+            for i in 1 ... @x_repeat
+              print "\\put(#{i * @box_width} ,0){\\line(0, 1){#{@frame_height}}}\n"
+            end
+            for i in 1 ... @y_repeat
+              print "\\put(0, #{i * @box_height}){\\line(1, 0){#{@frame_width}}}\n"
+            end
+          end
+
+          if @print_tombow
+            print "%--------- tombow ---------\n"
+            #DOWN-LEFT
+            print "\\put(0, -3){\\line(0, -1){5}}\n"
+            print "\\put(0, -3){\\line(-1, 0){8}}\n"
+            print "\\put(-3, 0){\\line(0, -1){8}}\n"
+            print "\\put(-3, 0){\\line(-1, 0){5}}\n"
+            #UP-LEFT
+            print "\\put(0,  #{3 + @frame_height}){\\line(0,  1){5}}\n"
+            print "\\put(0,  #{3 + @frame_height}){\\line(-1, 0){8}}\n"
+            print "\\put(-3, #{0 + @frame_height}){\\line(0,  1){8}}\n"
+            print "\\put(-3, #{0 + @frame_height}){\\line(-1,  0){5}}\n"
+            #DOWN-RIGHT
+            print "\\put(#{0 + @frame_width}, -3){\\line(0, -1){5}}\n"
+            print "\\put(#{0 + @frame_width}, -3){\\line(1,  0){8}}\n"
+            print "\\put(#{3 + @frame_width},  0){\\line(0, -1){8}}\n"
+            print "\\put(#{3 + @frame_width},  0){\\line(1,  0){5}}\n"
+
+            print "\\put(#{0 + @frame_width}, #{3 + @frame_height}){\\line(0, 1){5}}\n"
+            print "\\put(#{0 + @frame_width}, #{3 + @frame_height}){\\line(1, 0){8}}\n"
+            print "\\put(#{3 + @frame_width}, #{0 + @frame_height}){\\line(0, 1){8}}\n"
+            print "\\put(#{3 + @frame_width}, #{0 + @frame_height}){\\line(1, 0){5}}\n"
+            for i in 1 ... @x_repeat
+              print "\\put(#{i * @box_width} , -3){\\line(0, -1){5}}\n"
+              print "\\put(#{i * @box_width} , #{@frame_height + 3}){\\line(0, 1){5}}\n"
+            end
+            for i in 1 ... @y_repeat
+              print "\\put(-3, #{i * @box_height}){\\line(-1, 0){5}}\n"
+              print "\\put(#{@frame_width + 3}, #{i * @box_height}){\\line( 1, 0){5}}\n"
+            end
+          end #of tombow
+
+          if @print_pagenum
+            print "\\put(#{@frame_width/2}, -4){#{@pagenum}}\n"
+          end
+
+        end # of if @boxnum=1
+
+        #================= data itself =================
+        print "     %box number is #{@boxnum}\n"
+        print "     %box max number is #{@x_repeat * @y_repeat}\n"
+        print "     \\put(#{@box_x}, #{@box_y}){\\begin{picture}(#{@box_width},#{@box_height})\n"
+        for i in 0 ... box.size
+          print "        \\put(#{box[i][0]}, #{box[i][1]}){#{box[i][2]}}\n"
+        end
+        print "     \\end{picture}}\n\n"
+
+        #================ page footer ==================
+        if @boxnum == (@x_repeat * @y_repeat)
+          @boxnum = 0
+          @pagenum += 1
+          print "\\end{picture}} %end of box edge\n"
+          print "\\end{picture} %end of each page\n\n\n\n"
+          print "\\pagebreak\n"
+        end
+      end
+      #################### FOOTER ##########################
+      if @boxnum != @x_repeat * @y_repeat && @boxnum !=0
+        print "\\end{picture}} %end of box edge\n"
+        print "\\end{picture} %end of each page\n\n\n"
+      end
+      print "\n\\end{document}\n"
+    end
+  end
+end
+#coding:utf-8
+
+=begin
+======================== COPYRIGHT ==============================
+csvlayout - Tiled label print merge print with LaTeX
+
+Permission of copy and/or modification of this program is granted
+under the term of GPL (GNU General Pubric lisence) version 2 or higher
+or same terms of ruby(at your option).
+
+
+
+                                          Feb 2000 (C) Ryoichi Kato
+=end
+
+
+
+############# Include Files and default value of variable ################
+require "optparse"
+require "pathname"
+require "csv"
+
+
+###################### HELP and VERSION infomations ######################
+Version="1.0.3"
+Copyright="2013 (C) Ryoichi Kato"
+
+
+USAGE=<<"EOUSAGE"
+USAGE: #{File.basename($0)} [OPTIONS] [-f CSV_FILE.csv] FORMAT_FILE.fmt
+         try --help for detail.
+EOUSAGE
+
+
+
+HELP=<<"EOHELP"
+USAGE: #{File.basename($0)} [OPTIONS] [-f CSV_FILE.csv] FORMAT_FILE.fmt
+
+ * Read CSV data file as table such like that of spread sheet or RDBMS,
+   and output formated data in  LaTeX Format.
+   output should be specified by the file with extention ".fmt".
+ * By default, input file is CSV,  each line of input file is row, and row
+   is separated into columns by delimiter(commna).
+
+OPTIONS
+  -f, --csvfile
+    Spesify csv file explicitly (This option will over ride the definition
+    of csv file in .fmt file.)
+  -d, --debug
+    Print debugging imformation.
+  -h, --help
+    Print this help and exit.
+  -v, --version
+    Print verion information and exit.
+EOHELP
+
+
+########################### Global Variables #############################
+
+#  acceptable format option definition
+#========================================
+Fmt_acceptable_options = {
+# "option_name"      => /RE_of_acceptable_pattern/
+  "csvfile"          => /"[-\w]+\.csv"/,
+  "print_pagenum"    => /true|false/,
+  "print_frame"      => /true|false/,
+  "print_tombow"     => /true|false/,
+  "repeat_direction" => /true|false/,
+
+  "paper_width"      => /[0-9]+/,
+  "paper_height"     => /[0-9]+/,
+
+  "box_width"        => /[0-9]+/,
+  "box_height"       => /[0-9]+/,
+
+  "x_repeat"         => /[0-9]+/,
+  "y_repeat"         => /[0-9]+/,
+
+  "x_offset"         => /[0-9]+/,
+  "y_offset"         => /[0-9]+/,
+  "tex_preamble"     => /.*/,
+  "tex_prologue"     => /.*/,
+  "item"             => /\[[\s\.0-9]+,[\s\.0-9]+,.*\]/
+}
+
+
+
+##################### Commandline Option Parse ###########################
+$skip  = FALSE
+$DEBUG = FALSE
+csvfilepath = nil
+opt = OptionParser.new
+opt.on('-h', '--help') { |flag| print HELP; exit(0); }
+opt.on('-v', '--version') { |flag|
+  print File.basename($0), "  ", "Ver.", Version, "                ",Copyright, "\n"
+  exit(0)
+}
+#opt.on('-s', '--skip') { $skip = TRUE }
+opt.on('-d', '--debug') { $DEBUG = TRUE }
+opt.on('-f FILE', '--csvfile FILE') { |flag| csvfilepath = flag }
+
+opt.parse!(ARGV)
+
+unless fmtfilepath=ARGV[0]
+  STDERR.print "please specify .fmt file.\n"
+  STDERR.print USAGE
+  exit(1)
+end
+
+
+
+######################### Format File Parser #############################
+
+
+class Format
+  def initialize(fmtfilepath)
+    @fmtfile=File.open(fmtfilepath, "r:UTF-8")
+    @items = []
+    @linenum=0
+
+    while @line = @fmtfile.gets
+      @linenum += 1
+
+      #Check the line is form of expression for value substitution.
+      #If not just ignore the line
+      if /^\s*([a-z_-]+)\s*=\s*([^;]*)\s*$/ =~ @line
+    @option_matched = $1 # preserve match result
+    @value_matched  = $2 
+    @correspond_option_found = false # not found yet :)
+
+    # Search the option definition to see the expression is valid
+    Fmt_acceptable_options.each do |option,value_re|
+      if  @option_matched == option           # correspont option for the statemment found.
+        if value_re =~ @value_matched         # AND value for it is valid
+
+          #########################
+          #   then eval the line  #
+          #########################
+          if @option_matched == "item"
+            eval "@item = #{@value_matched}"
+            if @item.length == 3
+              @items.push(@item)
+            else
+              STDERR.print "W: Illegal value \"#{@value_matched}\" for item in line #{@linenum}.\n"
+              STDERR.print "Parse Error.\n"
+              exit(1)
+            end
+          else
+            eval "def #{option};  return #{@value_matched}; end"
+          end
+          @correspond_option_found = TRUE # and flag is ON.
+          break                           # not neccesary far more query in this line
+
+        else # @value_matched isn't valid format (described as value_re).
+          STDERR.print "W: Illegal value \"#{@value_matched}\" for #{option} in line #{@linenum}.\n"
+          STDERR.print "Parse Error.\n"
+          exit(1)
+        end
+      end
+    end #of Fmt_acceptable_option.each
+
+    unless @correspond_option_found
+      STDERR.print "W: Illegal option/statement in line #{@linenum}: #{@line}.\n"
+      STDERR.print "Parse Error.\n"
+      exit(1)
+    end
+      end
+    end
+  end #of initialize
+
+  def items
+    return @items
+  end
+
+end #of Format class definition
+
+
+############### convert data to formated text ###################
+
+def convert(data_array, format)
+  formated_text_and_coordinates=[]
+  for i in 0 ... format.items.size
+    formated_text_current = format.items[i][2].clone
+    for j in 0 ... data_array.size
+      if formated_text_current =~ /__#{j}__/
+        if ! data_array[j] then data_array[j]="" end
+        eval "formated_text_current.gsub!(/__#{j}__/,data_array[j])"
+      end
+    end
+    formated_text_and_coordinates.push([format.items[i][0], format.items[i][1], formated_text_current])
+  end
+  return formated_text_and_coordinates
+end
+
+
+
+
+#################################################################
+#                        Main Routine
+#################################################################
+
+
+format=Format.new(fmtfilepath)
+texpaper=TeXLayout::Paper.new
+
+if defined? format.paper_width && defined? format.paper_height
+  texpaper.set_papersize(format.paper_width, format.paper_height)
+end
+if defined? format.box_width && defined? format.box_height
+  texpaper.set_boxsize(format.box_width, format.box_height)
+end
+if defined? format.x_repeat && defined? format.y_repeat
+  texpaper.set_repeat(format.x_repeat, format.y_repeat)
+end
+if defined? format.x_offset && defined? format.y_offset
+  texpaper.set_offset(format.x_offset, format.y_offset)
+end
+if defined? format.print_pagenum then texpaper.print_pagenum(format.print_pagenum) end
+if defined? format.print_frame then texpaper.print_frame(format.print_frame) end
+if defined? format.print_tombow then texpaper.print_tombow(format.print_tombow) end
+if defined? format.repeat_direction then texpaper.repeat_direction(format.repeat_direction) end
+if defined? format.tex_preamble then texpaper.tex_preamble(format.tex_preamble) end
+if defined? format.tex_prologue then texpaper.tex_prologue(format.tex_prologue) end
+
+
+#============== csv file open & parse ================
+unless csvfilepath
+  if defined? format.csvfile
+    csvfilepath=Pathname.new(format.csvfile) # FIXME. make it relative to formatfile
+    if not csvfilepath.absolute?
+        csvfilepath = Pathname.new(fmtfilepath).dirname() + csvfilepath
+    end
+  else
+    STDERR.print "CSV file isn't specified in .fmt file.\n"
+    STDERR.print "use -f option to specify it in command line.\n\n"
+    STDERR.print USAGE
+    exit(1)
+  end
+end
+
+
+if File.readable?(csvfilepath)
+  CSV::foreach(csvfilepath, "r:UTF-8") do |row|
+        texpaper.put( convert(row, format) )
+  end
+else
+  STDERR.print "Can't load csvfile: #{csvfilepath}\n"
+  exit(1)
+end
+
+
+texpaper.print_tex
